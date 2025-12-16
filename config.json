@@ -1,0 +1,82 @@
+{
+    "project": {
+        "name": "智链新纪-京东评论情感分析",
+        "description": "基于4种算法的情感分析系统，包含LSTM+BERT深度学习模型"
+    },
+    
+    "data": {
+        "path": "data/jd_reviews.csv",
+        "text_column": "review",
+        "label_column": "sentiment",
+        "test_size": 0.2,
+        "random_state": 42,
+        "max_length": 200,
+        "min_word_freq": 3
+    },
+    
+    "models": {
+        "NaiveBayes": {
+            "use": true,
+            "alpha": 1.0
+        },
+        "SVM": {
+            "use": true,
+            "C": 1.0,
+            "kernel": "linear",
+            "probability": true
+        },
+        "LSTM": {
+            "use": true,
+            "embedding_dim": 256,
+            "hidden_dim": 128,
+            "num_layers": 2,
+            "dropout": 0.5,
+            "bidirectional": true,
+            "use_attention": true,
+            "attention_type": "self",
+            "num_heads": 4
+        },
+        "BERT": {
+            "use": true,
+            "model_name": "bert-base-chinese",
+            "max_length": 128,
+            "batch_size": 16,
+            "num_labels": 2
+        }
+    },
+    
+    "training": {
+        "epochs": 10,
+        "batch_size": 32,
+        "learning_rate": 0.001,
+        "bert_learning_rate": 2e-5,
+        "optimizer": "adam",
+        "early_stopping_patience": 3,
+        "save_best": true,
+        "log_interval": 50
+    },
+    
+    "evaluation": {
+        "metrics": ["accuracy", "precision", "recall", "f1", "confusion_matrix"],
+        "generate_report": true,
+        "plot_results": true,
+        "save_predictions": true
+    },
+    
+    "optimization": {
+        "param_grid": {
+            "LSTM": {
+                "learning_rate": [0.001, 0.0005, 0.0001],
+                "hidden_dim": [64, 128, 256],
+                "dropout": [0.3, 0.5, 0.7]
+            },
+            "BERT": {
+                "learning_rate": [2e-5, 3e-5, 5e-5],
+                "batch_size": [8, 16, 32]
+            }
+        },
+        "n_iter": 10,
+        "cv": 3,
+        "scoring": "f1"
+    }
+}

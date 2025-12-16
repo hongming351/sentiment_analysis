@@ -1,0 +1,2 @@
+model_type,total_epochs,best_val_accuracy,best_val_accuracy_epoch,final_train_accuracy,final_val_accuracy,final_train_loss,final_val_loss,best_val_f1,total_training_time,avg_epoch_time,overfitting_degree,improvement_val_acc,improvement_train_acc
+BERT,4,0.9067665858496804,3,0.9318833125137777,0.9061053559620896,0.1917021533906413,0.2753466650004118,0.9067697112245026,17740.37162709236,4435.09290677309,0.02577795655168802,0.014326647564470107,0.06302201974183752

@@ -1,0 +1,31 @@
+{
+  "model_info": {
+    "name": "LSTM+Attention",
+    "version": "1.0.0",
+    "description": "京东评论情感分析模型（使用优化模块）",
+    "author": "自动生成",
+    "created_time": "2025-12-05 23:27:23"
+  },
+  "performance": {
+    "final_accuracy": 0.8652766639935846,
+    "final_f1_score": 0.8652879298705226,
+    "best_val_accuracy": 0.8652766639935846,
+    "best_epoch": 9,
+    "training_time_seconds": 1430.336997270584,
+    "training_time_minutes": 23.838949954509737
+  },
+  "data_info": {
+    "train_samples": 45010,
+    "val_samples": 4988,
+    "vocab_size": 20000,
+    "max_sequence_length": 100
+  },
+  "training_info": {
+    "num_epochs": 10,
+    "batch_size": 64,
+    "device": "cpu",
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "criterion": "CrossEntropyLoss"
+  }
+}

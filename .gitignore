@@ -1,0 +1,57 @@
+.vene
+.vscode
+.__pycache__
+
+# 大文件和模型文件
+*.pt
+*.pkl
+*.pickle
+
+# 数据文件
+data/*.csv
+!data/data_loader.py
+
+
+# 模型文件
+models/*/models/
+models/*/vocab.pkl
+
+# 评估结果
+evaluation_results/
+nb_evaluation_results/
+results/
+
+# 训练日志和历史
+*_training_log_*.csv
+*_training_history*.csv
+*_results*.csv
+
+# 配置文件
+*_config.json
+
+# 临时文件
+*.tmp
+*.temp
+*~
+.DS_Store
+
+# Python字节码
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+Thumbs.db
