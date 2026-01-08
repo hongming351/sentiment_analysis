@@ -56,7 +56,10 @@ def load_test_data(data_dir=None):
     import pandas as pd
     
     if data_dir is None:
-        data_dir = r"D:\jd_changed12.11\data"
+        # 自动检测项目根目录
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(current_dir))
+        data_dir = os.path.join(project_root, 'data')
     
     test_path = os.path.join(data_dir, "dev.csv")
     print(f"测试文件路径: {test_path}")
@@ -243,10 +246,14 @@ def plot_performance_comparison(single_acc, ensemble_soft_acc, ensemble_hard_acc
 
 # ==================== 主函数 ====================
 def main():
+    # 自动检测项目根目录
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir))
+    
     # 配置
     config = {
-        'data_dir': r"D:\jd_changed12.11\data",
-        'model_dir': r"D:\jd_changed12.11\models\svm_model\svm_models",
+        'data_dir': os.path.join(project_root, 'data'),
+        'model_dir': os.path.join(current_dir, 'svm_models'),
         'text_column': 'sentence',
         'label_column': 'label',
         'n_folds': 5,

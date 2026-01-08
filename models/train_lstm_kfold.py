@@ -1,7 +1,6 @@
 # train_jd_lstm_cpu.py
 import warnings
 warnings.filterwarnings('ignore')
-
 import os
 import sys
 import pandas as pd
@@ -9,19 +8,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
 import re
 import jieba
 import matplotlib.pyplot as plt
-from collections import Counter, defaultdict
 from tqdm import tqdm
+from collections import Counter, defaultdict
 import collections
 import glob
-
+from torch.utils.data import Dataset
 print("=" * 70)
 print("京东评论情感分析 - LSTM模型训练 (使用交叉验证 - CPU训练)")
 print("=" * 70)
-
 # ==================== 1. 设置随机种子 ====================
 def set_seed(seed=1234):
     np.random.seed(seed)
@@ -50,24 +47,19 @@ def clean_text(text):
         return ""
     
     text = str(text).strip()
-    
     # 移除HTML标签
     text = re.sub(r'<[^>]+>', '', text)
     
     # 移除URL
     text = re.sub(r'http\S+|www\S+|https\S+', '', text)
-    
+
     # 移除邮箱
     text = re.sub(r'\S+@\S+', '', text)
-    
     # 保留中文、英文、数字和基本标点
     text = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9，。！？；：,.!?;\'"、]', ' ', text)
-    
     # 合并多个空格
     text = re.sub(r'\s+', ' ', text)
-    
     return text.strip()
-
 def tokenize_chinese(text, use_jieba=True):
     """中文分词"""
     text = clean_text(text)
@@ -353,43 +345,70 @@ def predict_sentiment(text, model, tokenizer_fn, vocab, device, max_length=256):
 def load_cross_validation_data(data_dir):
     """加载交叉验证数据集"""
     print(f"正在加载交叉验证数据，目录: {data_dir}")
-    
+
     # 查找所有训练集和验证集文件
     train_files = sorted(glob.glob(os.path.join(data_dir, "train_fold_*.csv")))
     valid_files = sorted(glob.glob(os.path.join(data_dir, "val_fold_*.csv")))
-    
-    if not train_files or not valid_files:
-        raise FileNotFoundError(f"在目录 {data_dir} 中找不到交叉验证文件")
-    
-    print(f"找到 {len(train_files)} 个训练集文件和 {len(valid_files)} 个验证集文件")
-    
-    # 合并所有训练集和验证集数据
-    all_train_dfs = []
-    all_valid_dfs = []
-    
-    for train_file in train_files:
-        df = pd.read_csv(train_file)
+
+    if train_files and valid_files:
+        # 如果找到交叉验证文件，使用它们
+        print(f"找到 {len(train_files)} 个训练集文件和 {len(valid_files)} 个验证集文件")
+
+        # 合并所有训练集和验证集数据
+        all_train_dfs = []
+        all_valid_dfs = []
+
+        for train_file in train_files:
+            df = pd.read_csv(train_file)
+            # 处理缺失值
+            df = df.dropna(subset=['sentence', 'label'])
+            df['label'] = df['label'].fillna(0).astype(int)
+            all_train_dfs.append(df)
+            print(f"  加载: {os.path.basename(train_file)} - {len(df)} 条数据")
+
+        for valid_file in valid_files:
+            df = pd.read_csv(valid_file)
+            # 处理缺失值
+            df = df.dropna(subset=['sentence', 'label'])
+            df['label'] = df['label'].fillna(0).astype(int)
+            all_valid_dfs.append(df)
+            print(f"  加载: {os.path.basename(valid_file)} - {len(df)} 条数据")
+
+        # 合并数据
+        train_df = pd.concat(all_train_dfs, ignore_index=True)
+        valid_df = pd.concat(all_valid_dfs, ignore_index=True)
+
+        print(f"✓ 合并后训练集: {len(train_df)} 条评论")
+        print(f"✓ 合并后验证集: {len(valid_df)} 条评论")
+    else:
+        # 如果没有找到交叉验证文件，使用train.csv和dev.csv作为替代
+        print("⚠️  未找到交叉验证文件，使用train.csv和dev.csv作为替代")
+
+        # 加载train.csv作为训练集
+        train_file = os.path.join(data_dir, "train.csv")
+        if not os.path.exists(train_file):
+            raise FileNotFoundError(f"在目录 {data_dir} 中找不到train.csv文件")
+
+        train_df = pd.read_csv(train_file)
         # 处理缺失值
-        df = df.dropna(subset=['sentence', 'label'])
-        df['label'] = df['label'].fillna(0).astype(int)
-        all_train_dfs.append(df)
-        print(f"  加载: {os.path.basename(train_file)} - {len(df)} 条数据")
-    
-    for valid_file in valid_files:
-        df = pd.read_csv(valid_file)
+        train_df = train_df.dropna(subset=['sentence', 'label'])
+        train_df['label'] = train_df['label'].fillna(0).astype(int)
+        print(f"  加载训练集: train.csv - {len(train_df)} 条数据")
+
+        # 加载dev.csv作为验证集
+        valid_file = os.path.join(data_dir, "dev.csv")
+        if not os.path.exists(valid_file):
+            raise FileNotFoundError(f"在目录 {data_dir} 中找不到dev.csv文件")
+
+        valid_df = pd.read_csv(valid_file)
         # 处理缺失值
-        df = df.dropna(subset=['sentence', 'label'])
-        df['label'] = df['label'].fillna(0).astype(int)
-        all_valid_dfs.append(df)
-        print(f"  加载: {os.path.basename(valid_file)} - {len(df)} 条数据")
-    
-    # 合并数据
-    train_df = pd.concat(all_train_dfs, ignore_index=True)
-    valid_df = pd.concat(all_valid_dfs, ignore_index=True)
-    
-    print(f"✓ 合并后训练集: {len(train_df)} 条评论")
-    print(f"✓ 合并后验证集: {len(valid_df)} 条评论")
-    
+        valid_df = valid_df.dropna(subset=['sentence', 'label'])
+        valid_df['label'] = valid_df['label'].fillna(0).astype(int)
+        print(f"  加载验证集: dev.csv - {len(valid_df)} 条数据")
+
+        print(f"✓ 使用train.csv作为训练集: {len(train_df)} 条评论")
+        print(f"✓ 使用dev.csv作为验证集: {len(valid_df)} 条评论")
+
     return train_df, valid_df
 
 def load_test_data(test_file, data_dir=None):
@@ -417,25 +436,27 @@ def load_test_data(test_file, data_dir=None):
 
 # ==================== 11. 主函数 ====================
 def main():
-    # ==================== 强制使用CPU ====================
+    # ==================== 设备选择 ====================
     print("\n" + "="*70)
-    print("⚡ 强制使用CPU进行训练")
+    print("🔧 设备选择与配置")
     print("="*70)
-    
-    # 强制使用CPU
-    device = torch.device("cpu")
-    print(f"📱 使用设备: {device}")
-    
-    # 检查CUDA是否可用，但不使用
+
+    # 优先使用GPU，如果不可用则使用CPU
     if torch.cuda.is_available():
-        print(f"  ⚠️  检测到CUDA可用，但强制使用CPU")
+        device = torch.device("cuda")
+        print(f"📱 使用设备: {device}")
+        print(f"  ✅ GPU可用 - 使用GPU加速训练")
         print(f"  GPU型号: {torch.cuda.get_device_name(0)}")
         print(f"  CUDA版本: {torch.version.cuda}")
     else:
-        print(f"  ✓ CUDA不可用，使用CPU")
+        device = torch.device("cpu")
+        print(f"📱 使用设备: {device}")
+        print(f"  ⚠️  CUDA不可用，使用CPU")
+        print(f"  训练速度可能较慢，请耐心等待")
     
     # ==================== 数据目录配置 ====================
-    data_dir = r"D:\jd_changed12.11\data"
+    # 使用当前项目的数据目录
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
     test_file = os.path.join(data_dir, "dev.csv")
     
     # ==================== 加载数据 ====================

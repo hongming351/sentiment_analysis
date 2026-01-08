@@ -977,23 +977,36 @@ def train_single_fold(fold_idx, train_df, val_df, vocab, device, n_epochs=15, sa
 
 # ==================== 9. 构建全局词汇表函数 ====================
 def build_global_vocabulary(data_dir, min_freq=2, max_size=20000):
-    """从所有训练折构建全局词汇表"""
+    """从所有训练数据构建全局词汇表"""
     print("🌍 构建全局词汇表...")
+
+    # 尝试加载预分好的折文件
+    pre_split_files_exist = True
+    for fold_idx in range(5):
+        train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
+        if not os.path.exists(train_path):
+            pre_split_files_exist = False
+            break
 
     all_texts = []
     total_samples = 0
 
-    for fold_idx in range(5):
-        train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
-        if not os.path.exists(train_path):
-            raise FileNotFoundError(f"找不到训练折文件: {train_path}")
-
+    if pre_split_files_exist:
+        print("📁 从预分好的折文件构建词汇表...")
+        for fold_idx in range(5):
+            train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
+            train_df = pd.read_csv(train_path)
+            texts = train_df['sentence'].astype(str).tolist()
+            all_texts.extend(texts)
+            total_samples += len(texts)
+            print(f"  第{fold_idx+1}折: {len(texts)} 条文本")
+    else:
+        print("📁 从 train.csv 构建词汇表...")
+        train_path = os.path.join(data_dir, "train.csv")
         train_df = pd.read_csv(train_path)
-        texts = train_df['sentence'].astype(str).tolist()
-        all_texts.extend(texts)
-        total_samples += len(texts)
-
-        print(f"  第{fold_idx+1}折: {len(texts)} 条文本")
+        all_texts = train_df['sentence'].astype(str).tolist()
+        total_samples = len(all_texts)
+        print(f"  训练集: {total_samples} 条文本")
 
     print(f"\n  总训练文本: {total_samples} 条")
     print(f"  去重后文本: {len(set(all_texts))} 条")
@@ -1027,15 +1040,22 @@ def main():
 
     data_dir = "data"
 
-    try:
+    # 检查是否有预分好的折文件
+    pre_split_files_exist = True
+    for fold_idx in range(5):
+        train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
+        val_path = os.path.join(data_dir, f"val_fold_{fold_idx}.csv")
+        if not (os.path.exists(train_path) and os.path.exists(val_path)):
+            pre_split_files_exist = False
+            break
+    
+    if pre_split_files_exist:
+        print("📁 使用预分好的交叉验证数据")
         # 加载所有交叉验证折
         folds = []
         for fold_idx in range(5):
             train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
             val_path = os.path.join(data_dir, f"val_fold_{fold_idx}.csv")
-
-            if not os.path.exists(train_path) or not os.path.exists(val_path):
-                raise FileNotFoundError(f"找不到第{fold_idx}折数据文件")
 
             train_df = pd.read_csv(train_path)
             val_df = pd.read_csv(val_path)
@@ -1047,18 +1067,47 @@ def main():
             })
 
         print(f"✓ 加载了 5 折交叉验证数据")
+    else:
+        print("📁 从 train.csv 创建交叉验证折")
+        # 加载主训练数据
+        train_path = os.path.join(data_dir, "train.csv")
+        if not os.path.exists(train_path):
+            print(f"❌ 错误: 找不到训练数据文件: {train_path}")
+            return
 
-        # 加载测试集
-        test_path = os.path.join(data_dir, "dev.csv")
-        if not os.path.exists(test_path):
-            raise FileNotFoundError(f"找不到测试集文件: {test_path}")
+        train_df = pd.read_csv(train_path)
+        print(f"  训练集总大小: {len(train_df)} 行")
 
-        test_df = pd.read_csv(test_path)
-        print(f"✓ 测试集: {len(test_df)} 条评论")
+        # 清洗标签数据
+        train_df = train_df.dropna(subset=['label'])
+        train_df['label'] = train_df['label'].astype(int)
+        print(f"  有效数据: {len(train_df)} 行")
 
-    except FileNotFoundError as e:
-        print(f"❌ 错误: {e}")
+        # 创建交叉验证折
+        from sklearn.model_selection import KFold
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
+        folds = []
+        for fold_idx, (train_idx, val_idx) in enumerate(kf.split(train_df)):
+            train_fold = train_df.iloc[train_idx].copy()
+            val_fold = train_df.iloc[val_idx].copy()
+
+            print(f"  第{fold_idx}折: 训练集 {len(train_fold)} 行, 验证集 {len(val_fold)} 行")
+
+            folds.append({
+                'fold': fold_idx,
+                'train': train_fold,
+                'val': val_fold
+            })
+
+    # 加载测试集
+    test_path = os.path.join(data_dir, "dev.csv")
+    if not os.path.exists(test_path):
+        print(f"❌ 错误: 找不到测试集文件: {test_path}")
         return
+
+    test_df = pd.read_csv(test_path)
+    print(f"✓ 测试集: {len(test_df)} 条评论")
 
     # ==================== 构建全局词汇表 ====================
     print("\n" + "="*70)

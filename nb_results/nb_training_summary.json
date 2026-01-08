@@ -1,0 +1,46 @@
+{
+  "fold_results": [
+    {
+      "fold": 0,
+      "model_path": "nb_models\\nb_fold_0.pkl",
+      "train_time": 1.0002121925354004,
+      "val_accuracy": 0.8593802065978007
+    },
+    {
+      "fold": 1,
+      "model_path": "nb_models\\nb_fold_1.pkl",
+      "train_time": 0.9756858348846436,
+      "val_accuracy": 0.8578251693879818
+    },
+    {
+      "fold": 2,
+      "model_path": "nb_models\\nb_fold_2.pkl",
+      "train_time": 0.9225006103515625,
+      "val_accuracy": 0.8580315485447678
+    },
+    {
+      "fold": 3,
+      "model_path": "nb_models\\nb_fold_3.pkl",
+      "train_time": 1.021254062652588,
+      "val_accuracy": 0.8681404132415019
+    },
+    {
+      "fold": 4,
+      "model_path": "nb_models\\nb_fold_4.pkl",
+      "train_time": 0.9299745559692383,
+      "val_accuracy": 0.8648078204843368
+    }
+  ],
+  "total_training_time": 4.849627256393433,
+  "avg_training_time": 0.9699254512786866,
+  "val_accuracies": [
+    0.8593802065978007,
+    0.8578251693879818,
+    0.8580315485447678,
+    0.8681404132415019,
+    0.8648078204843368
+  ],
+  "mean_val_accuracy": 0.8616370316512778,
+  "std_val_accuracy": 0.004122400650096705,
+  "timestamp": "2026-01-08 17:00:00"
+}

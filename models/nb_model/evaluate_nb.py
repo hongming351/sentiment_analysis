@@ -97,13 +97,23 @@ def load_nb_models(model_dir=None, n_folds=5):
     if model_dir is None:
         # 自动计算绝对路径
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_dir = os.path.join(current_dir, "nb_models")
-    
-    # 如果不存在，尝试其他路径
-    if not os.path.exists(model_dir):
-        # 尝试项目结构路径
         project_root = os.path.dirname(os.path.dirname(current_dir))
-        model_dir = os.path.join(project_root, 'models', 'svm_model', 'nb_models')
+        
+        # 按优先级尝试多个路径
+        possible_dirs = [
+            os.path.join(project_root, 'nb_models'),  # 根目录的nb_models
+            os.path.join(current_dir, 'nb_models'),   # 当前目录的nb_models
+            os.path.join(project_root, 'models', 'nb_model', 'nb_models'),
+        ]
+        
+        model_dir = None
+        for dir_path in possible_dirs:
+            if os.path.exists(dir_path) and any(f'nb_fold_{i}.pkl' in os.listdir(dir_path) for i in range(n_folds)):
+                model_dir = dir_path
+                break
+        
+        if model_dir is None:
+            model_dir = possible_dirs[0]  # 默认使用第一个
     
     print(f"\n📂 模型目录: {model_dir}")
     print(f"   目录是否存在: {os.path.exists(model_dir)}")

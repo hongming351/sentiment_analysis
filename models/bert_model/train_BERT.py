@@ -564,28 +564,66 @@ def load_cross_validation_data(data_dir="data"):
     """加载5折交叉验证数据"""
     print("加载交叉验证数据...")
     
-    folds = []
+    # 检查是否有预分好的折文件
+    pre_split_files_exist = True
     for fold_idx in range(5):
         train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
         val_path = os.path.join(data_dir, f"val_fold_{fold_idx}.csv")
-        
-        if not os.path.exists(train_path) or not os.path.exists(val_path):
-            raise FileNotFoundError(f"找不到第{fold_idx}折数据文件")
+        if not (os.path.exists(train_path) and os.path.exists(val_path)):
+            pre_split_files_exist = False
+            break
+    
+    folds = []
+    
+    if pre_split_files_exist:
+        print("📁 使用预分好的交叉验证数据")
+        for fold_idx in range(5):
+            train_path = os.path.join(data_dir, f"train_fold_{fold_idx}.csv")
+            val_path = os.path.join(data_dir, f"val_fold_{fold_idx}.csv")
+            
+            train_df = pd.read_csv(train_path)
+            val_df = pd.read_csv(val_path)
+            
+            # 清洗数据
+            train_df = clean_data(train_df)
+            val_df = clean_data(val_df)
+            
+            folds.append({
+                'fold': fold_idx,
+                'train': train_df,
+                'val': val_df
+            })
+            
+            print(f"  第{fold_idx+1}折: 训练集={len(train_df)}, 验证集={len(val_df)}")
+    else:
+        print("📁 从 train.csv 创建交叉验证折")
+        # 加载主训练数据
+        train_path = os.path.join(data_dir, "train.csv")
+        if not os.path.exists(train_path):
+            raise FileNotFoundError(f"找不到训练数据文件: {train_path}")
         
         train_df = pd.read_csv(train_path)
-        val_df = pd.read_csv(val_path)
+        print(f"  训练集总大小: {len(train_df)} 行")
         
         # 清洗数据
         train_df = clean_data(train_df)
-        val_df = clean_data(val_df)
+        print(f"  有效数据: {len(train_df)} 行")
         
-        folds.append({
-            'fold': fold_idx,
-            'train': train_df,
-            'val': val_df
-        })
+        # 创建交叉验证折
+        from sklearn.model_selection import KFold
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
         
-        print(f"  第{fold_idx+1}折: 训练集={len(train_df)}, 验证集={len(val_df)}")
+        for fold_idx, (train_idx, val_idx) in enumerate(kf.split(train_df)):
+            train_fold = train_df.iloc[train_idx].copy()
+            val_fold = train_df.iloc[val_idx].copy()
+            
+            print(f"  第{fold_idx}折: 训练集 {len(train_fold)} 行, 验证集 {len(val_fold)} 行")
+            
+            folds.append({
+                'fold': fold_idx,
+                'train': train_fold,
+                'val': val_fold
+            })
     
     return folds
 

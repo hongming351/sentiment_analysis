@@ -1,12 +1,9 @@
-
 """
 数据集探索脚本
 用于查看和了解数据集结构
 """
 
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
 import json
 

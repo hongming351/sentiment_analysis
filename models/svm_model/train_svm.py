@@ -1,4 +1,3 @@
-# train_svm.py - 修复路径问题版本
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -12,6 +11,7 @@ from pathlib import Path
 from sklearn.svm import LinearSVC
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import KFold
 from tqdm import tqdm
 
 print("=" * 70)
@@ -65,33 +65,67 @@ def load_fold_data(data_dir='data', n_folds=5):
     print(f"  找到 {len(csv_files)} 个CSV文件")
     print(f"  文件列表: {csv_files[:10]}...")
     
+    # 检查是否有预分好的折文件
+    pre_split_files_exist = True
     for fold_idx in range(n_folds):
         train_path = Path(data_dir) / f"train_fold_{fold_idx}.csv"
         val_path = Path(data_dir) / f"val_fold_{fold_idx}.csv"
-        
-        print(f"\n  处理第{fold_idx}折:")
-        print(f"    训练文件: {train_path}")
-        print(f"    是否存在: {train_path.exists()}")
-        print(f"    验证文件: {val_path}")
-        print(f"    是否存在: {val_path.exists()}")
-        
+        if not (train_path.exists() and val_path.exists()):
+            pre_split_files_exist = False
+            break
+    
+    if pre_split_files_exist:
+        print("\n📁 使用预分好的交叉验证数据")
+        for fold_idx in range(n_folds):
+            train_path = Path(data_dir) / f"train_fold_{fold_idx}.csv"
+            val_path = Path(data_dir) / f"val_fold_{fold_idx}.csv"
+            
+            print(f"\n  处理第{fold_idx}折:")
+            print(f"    训练文件: {train_path}")
+            print(f"    验证文件: {val_path}")
+            
+            train_df = pd.read_csv(train_path)
+            val_df = pd.read_csv(val_path)
+            
+            print(f"    训练集大小: {len(train_df)} 行")
+            print(f"    验证集大小: {len(val_df)} 行")
+            
+            folds.append({
+                'fold': fold_idx,
+                'train': train_df,
+                'val': val_df
+            })
+    else:
+        print("\n📁 从 train.csv 创建交叉验证折")
+        # 加载主训练数据
+        train_path = Path(data_dir) / "train.csv"
         if not train_path.exists():
-            raise FileNotFoundError(f"找不到第{fold_idx}折训练数据文件: {train_path}")
-        
-        if not val_path.exists():
-            raise FileNotFoundError(f"找不到第{fold_idx}折验证数据文件: {val_path}")
+            raise FileNotFoundError(f"找不到训练数据文件: {train_path}")
         
         train_df = pd.read_csv(train_path)
-        val_df = pd.read_csv(val_path)
+        print(f"  训练集总大小: {len(train_df)} 行")
         
-        print(f"    训练集大小: {len(train_df)} 行")
-        print(f"    验证集大小: {len(val_df)} 行")
+        # 清洗标签数据
+        train_df = train_df.dropna(subset=['label'])
+        train_df['label'] = train_df['label'].astype(int)
+        print(f"  有效数据: {len(train_df)} 行")
         
-        folds.append({
-            'fold': fold_idx,
-            'train': train_df,
-            'val': val_df
-        })
+        # 创建交叉验证折
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
+        
+        for fold_idx, (train_idx, val_idx) in enumerate(kf.split(train_df)):
+            train_fold = train_df.iloc[train_idx].copy()
+            val_fold = train_df.iloc[val_idx].copy()
+            
+            print(f"\n  第{fold_idx}折:")
+            print(f"    训练集大小: {len(train_fold)} 行")
+            print(f"    验证集大小: {len(val_fold)} 行")
+            
+            folds.append({
+                'fold': fold_idx,
+                'train': train_fold,
+                'val': val_fold
+            })
     
     # 加载测试集
     test_path = Path(data_dir) / "dev.csv"

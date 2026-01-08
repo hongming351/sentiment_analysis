@@ -475,17 +475,17 @@ if __name__ == "__main__":
     
     print("测试数据预处理...")
     print("="*60)
-    
+
     # 创建预处理器
     preprocessor = DataPreprocessor(use_jieba=True)
-    
+
     # 预处理数据
     processed_df, vocab = preprocessor.preprocess_jd_dataset(
         sample_data,
         text_column='sentence',
         label_column='label',
         balance=True,
-        save_vocab_path='test_vocab.pkl'
+        save_vocab_path='tests/test_vocab.pkl'
     )
     
     print("\n处理结果:")
