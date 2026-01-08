@@ -1,0 +1,53 @@
+{
+  "config": {
+    "data_dir": null,
+    "model_dir": null,
+    "text_column": "sentence",
+    "label_column": "label",
+    "n_folds": 5,
+    "results_dir": "nb_evaluation_results",
+    "seed": 42
+  },
+  "metrics": {
+    "ensemble": {
+      "accuracy": 0.8598636728147554,
+      "precision": 0.8601811544180404,
+      "recall": 0.8598636728147554,
+      "f1": 0.8597720956076483,
+      "confusion_matrix": [
+        [
+          2240,
+          307
+        ],
+        [
+          392,
+          2049
+        ]
+      ]
+    },
+    "single": {
+      "accuracy": 0.8616680032076984,
+      "precision": 0.8620922318484873,
+      "recall": 0.8616680032076984,
+      "f1": 0.8615600078228859,
+      "confusion_matrix": [
+        [
+          2250,
+          297
+        ],
+        [
+          393,
+          2048
+        ]
+      ]
+    }
+  },
+  "test_info": {
+    "size": 4988,
+    "timestamp": "2026-01-08 17:00:55"
+  },
+  "performance_improvement": {
+    "accuracy_improvement": -0.001804330392943032,
+    "f1_improvement": -0.0017879122152375526
+  }
+}

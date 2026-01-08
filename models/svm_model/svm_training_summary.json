@@ -1,0 +1,32 @@
+{
+  "fold_results": [
+    {
+      "fold": 0,
+      "model_path": "svm_models\\svm_fold_0.pkl",
+      "train_time": 1.358349323272705
+    },
+    {
+      "fold": 1,
+      "model_path": "svm_models\\svm_fold_1.pkl",
+      "train_time": 1.1745445728302002
+    },
+    {
+      "fold": 2,
+      "model_path": "svm_models\\svm_fold_2.pkl",
+      "train_time": 1.131345272064209
+    },
+    {
+      "fold": 3,
+      "model_path": "svm_models\\svm_fold_3.pkl",
+      "train_time": 1.196666955947876
+    },
+    {
+      "fold": 4,
+      "model_path": "svm_models\\svm_fold_4.pkl",
+      "train_time": 1.193086862564087
+    }
+  ],
+  "total_training_time": 6.053992986679077,
+  "avg_training_time": 1.2107985973358155,
+  "timestamp": "2026-01-08 16:54:27"
+}

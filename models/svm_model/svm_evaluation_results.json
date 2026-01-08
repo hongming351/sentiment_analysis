@@ -1,0 +1,48 @@
+{
+  "single_model": {
+    "accuracy": 0.8526463512429832,
+    "f1_score": 0.8526618296327662,
+    "confusion_matrix": [
+      [
+        2160,
+        387
+      ],
+      [
+        348,
+        2093
+      ]
+    ]
+  },
+  "ensemble_soft": {
+    "accuracy": 0.8598636728147554,
+    "f1_score": 0.8598791362203312,
+    "improvement": 0.007217321571772239,
+    "confusion_matrix": [
+      [
+        2175,
+        372
+      ],
+      [
+        327,
+        2114
+      ]
+    ]
+  },
+  "ensemble_hard": {
+    "accuracy": 0.859663191659984,
+    "f1_score": 0.8596780852253262,
+    "improvement": 0.007016840417000791,
+    "confusion_matrix": [
+      [
+        2177,
+        370
+      ],
+      [
+        330,
+        2111
+      ]
+    ]
+  },
+  "test_set_size": 4988,
+  "evaluation_date": "2026-01-08 16:56:31"
+}
